@@ -1,10 +1,9 @@
 name: Mobile App Tests
 
-# Run daily at 6:00 AM UTC
 on:
   schedule:
     - cron: '0 6 * * *'
-  workflow_dispatch: # optional: allows manual trigger
+  workflow_dispatch:
 
 jobs:
   run-tests:
@@ -20,21 +19,31 @@ jobs:
           node-version: '20'
 
       - name: Install dependencies
-        run: |
-          npm ci
+        run: npm ci
 
-      - name: Set up Android Emulator + SDK
+      - name: Install Android SDK + platform-tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y unzip wget openjdk-17-jdk
+          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
+          mkdir -p $HOME/Android/cmdline-tools
+          unzip cmdline-tools.zip -d $HOME/Android/cmdline-tools
+          export ANDROID_HOME=$HOME/Android
+          export PATH=$ANDROID_HOME/cmdline-tools/cmdline-tools/bin:$ANDROID_HOME/platform-tools:$PATH
+          yes | sdkmanager --licenses
+          sdkmanager "platform-tools" "platforms;android-33" "system-images;android-33;google_apis;x86_64"
+
+      - name: Launch emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 33
           target: google_apis
           arch: x86_64
           force-avd-creation: true
+          avd-name: test
           emulator-options: -no-window -no-audio
-          setup: true
           disable-animations: true
           emulator-boot-timeout: 600
-          avd-name: test
 
       - name: Start Appium server
         run: |
