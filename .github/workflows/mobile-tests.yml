@@ -176,8 +176,10 @@ jobs:
           api-level: 30
           target: google_apis
           arch: x86_64
-          emulator-options: -no-window -no-audio
+          emulator-options: "-no-window"   # remove -no-audio if needed
+          force-avd-creation: true
           disable-animations: true
+          emulator-boot-timeout: 600
 
       - name: Install app
         run: adb install -r app/diia-debug.apk
