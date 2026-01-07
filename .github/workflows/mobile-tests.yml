@@ -36,7 +36,10 @@ jobs:
           echo "ANDROID_HOME=$HOME/Android" >> $GITHUB_ENV
           echo "$HOME/Android/platform-tools:$HOME/Android/cmdline-tools/cmdline-tools/bin:$PATH" >> $GITHUB_PATH
 
-      - name: Launch emulator
+      - name: Install Appium globally
+        run: npm install -g appium
+
+      - name: Launch emulator and run tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 33
@@ -47,11 +50,11 @@ jobs:
           emulator-options: -no-window -no-audio
           disable-animations: true
           emulator-boot-timeout: 600
-
-      - name: Start Appium server
-        run: |
-          npm install -g appium
-          nohup appium --port 4723 --log-level info &
-
-      - name: Run WDIO tests
-        run: npx wdio run wdio.conf.js
+          cores: 2
+          emulator-port: 5554
+          script: |
+            echo "Waiting for emulator to be fully ready..."
+            adb wait-for-device
+            adb shell 'while [[ -z $(getprop sys.boot_completed | tr -d '\''\r'\'') ]]; do sleep 1; done'
+            echo "Emulator is ready. Running tests..."
+            npx wdio run wdio.conf.js
