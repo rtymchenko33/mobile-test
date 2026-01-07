@@ -1,3 +1,5 @@
+const path = require('path');
+
 exports.config = {
     //
     // ====================
@@ -51,14 +53,26 @@ exports.config = {
     // https://saucelabs.com/platform/platform-configurator
     //
 
+    // capabilities: [{
+    //     platformName: 'Android',
+    //     'appium:deviceName': 'emulator-5554',
+    //     'appium:automationName': 'UiAutomator2',
+    //     'appium:appPackage': 'ua.gov.diia.opensource',
+    //     'appium:appActivity': 'ua.gov.diia.opensource.VendorActivity',
+    //     'appium:noReset': true
+    // }],
+
     capabilities: [{
         platformName: 'Android',
         'appium:deviceName': 'emulator-5554',
         'appium:automationName': 'UiAutomator2',
+        'appium:app': path.resolve('./app/diia-debug.apk'),
         'appium:appPackage': 'ua.gov.diia.opensource',
         'appium:appActivity': 'ua.gov.diia.opensource.VendorActivity',
-        'appium:noReset': true
-    }],
+        'appium:autoGrantPermissions': true,
+        'appium:noReset': false
+      }],
+      
 
     //
     // ===================

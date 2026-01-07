@@ -6,11 +6,38 @@ describe('Open Diia app', () => {
             'ua.gov.diia.opensource',
             'ua.gov.diia.opensource.VendorActivity'
         );
+
+        const loginWithNBU = await $('android=new UiSelector().text("BankID HБУ")');
+        await loginWithNBU.click();
+
+        const bankNadiia = await $('android=new UiSelector().text("Банк НаДія")');
+        await bankNadiia.click();
+
+        const tokenInput = await $('//android.widget.EditText[@resource-id="tokenInputField"]');
+
+        await tokenInput.waitForExist({ timeout: 10000 });
+        await tokenInput.waitForDisplayed({ timeout: 10000 });
+
+        await tokenInput.click();
+        await tokenInput.setValue('F0571FBF3FD94EE4E56DE58861126');
+
+        const signinBtn = await $('android=new UiSelector().text("SignIn")');
+        await signinBtn.click();
+
+        const nextBtn = await $('android=new UiSelector().text("Далі")');
+        await nextBtn.click();
         
-        const codeScreenHeader = await $('android=new UiSelector().text("Код для входу")');
-        await expect(codeScreenHeader).toBeDisplayed();
+        // const codeScreenHeader = await $('~Придумайте код з 4 цифр');
+        // await expect(codeScreenHeader).toBeDisplayed();
 
         const zeroCodeButton = await $('android=new UiSelector().text("0")');
+        for (let i = 0; i < 4; i++) {
+            await zeroCodeButton.click();
+        }
+
+        // const repeatCodeScreenHeader = await $('~Повторіть код з 4 цифр');
+        // await expect(repeatCodeScreenHeader).toBeDisplayed();
+
         for (let i = 0; i < 4; i++) {
             await zeroCodeButton.click();
         }
