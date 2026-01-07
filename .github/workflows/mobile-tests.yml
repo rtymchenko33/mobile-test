@@ -1,16 +1,17 @@
 name: Mobile App Tests
 
+# Run daily at 6:00 AM UTC
 on:
   schedule:
     - cron: '0 6 * * *'
-  workflow_dispatch:
+  workflow_dispatch: # optional: allows manual trigger
 
 jobs:
   run-tests:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v3
 
       - name: Set up Node.js
@@ -19,25 +20,26 @@ jobs:
           node-version: '20'
 
       - name: Install dependencies
-        run: npm ci
-
-      - name: Set up Android SDK
         run: |
-          choco install -y android-sdk
-          echo "ANDROID_HOME=C:\tools\android-sdk" >> $env:GITHUB_ENV
-          echo "PATH=$env:PATH;C:\tools\android-sdk\platform-tools;C:\tools\android-sdk\emulator" >> $env:GITHUB_ENV
+          npm ci
 
-      - name: Create emulator
-        run: |
-          sdkmanager "system-images;android-33;google_apis;x86_64"
-          echo no | avdmanager create avd -n test -k "system-images;android-33;google_apis;x86_64" --force
-          start "" emulator -avd test -no-window -no-audio &
-          timeout /t 120
+      - name: Set up Android Emulator + SDK
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 33
+          target: google_apis
+          arch: x86_64
+          force-avd-creation: true
+          emulator-options: -no-window -no-audio
+          setup: true
+          disable-animations: true
+          emulator-boot-timeout: 600
+          avd-name: test
 
       - name: Start Appium server
         run: |
           npm install -g appium
-          start /b appium --port 4723 --log-level info
+          nohup appium --port 4723 --log-level info &
 
       - name: Run WDIO tests
         run: npx wdio run wdio.conf.js
