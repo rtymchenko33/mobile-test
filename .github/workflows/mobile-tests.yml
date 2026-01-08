@@ -218,6 +218,13 @@
 #             echo "Stopping Appium..."
 #             kill $APPIUM_PID || true
 
+name: Mobile App Tests
+
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
 jobs:
   android-tests:
     runs-on: ubuntu-latest
