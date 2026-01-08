@@ -222,7 +222,7 @@ name: Mobile App Tests
 
 on:
   schedule:
-    - cron: '0 6 * * *' # every day at 6 AM
+    - cron: '0 6 * * *'
   workflow_dispatch:
 
 jobs:
@@ -253,9 +253,9 @@ jobs:
       - name: Start Android emulator and run tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 33               # latest stable Android version
+          api-level: 33
           target: google_apis
-          arch: arm64                 # must be arm64 on macOS
+          arch: arm64-v8a          # ✅ corrected value
           force-avd-creation: true
           disable-animations: true
           emulator-boot-timeout: 900
@@ -288,3 +288,4 @@ jobs:
 
             echo "Stopping Appium..."
             kill $APPIUM_PID || true
+
