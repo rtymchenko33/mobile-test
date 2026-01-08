@@ -146,16 +146,88 @@
 #           adb -s emulator-5554 emu kill || true
 #           kill $EMULATOR_PID 2>/dev/null || true
 
+# SECOND ATTEMPT
+# name: Mobile App Tests
+
+# on:
+#   schedule:
+#     - cron: '0 6 * * *'
+#   workflow_dispatch:
+
+# jobs:
+#   run-tests:
+#     runs-on: ubuntu-latest
+#     timeout-minutes: 45
+
+#     steps:
+#       - name: Checkout repo
+#         uses: actions/checkout@v4
+
+#       - name: Set up Node.js
+#         uses: actions/setup-node@v4
+#         with:
+#           node-version: '20'
+#           cache: 'npm'
+
+#       - name: Install dependencies
+#         run: npm ci
+
+#       - name: Install Appium and Android driver
+#         run: |
+#           npm install -g appium
+#           appium driver update uiautomator2
+#           appium -v
+#           appium driver list --installed
+
+#       - name: Start Android emulator and run tests
+#         uses: reactivecircus/android-emulator-runner@v2
+#         with:
+#           api-level: 30
+#           target: google_apis
+#           arch: x86_64
+
+#           # 🔑 THIS IS THE KEY LINE
+#           disable-linux-hw-accel: false
+
+#           force-avd-creation: true
+#           disable-animations: true
+#           emulator-boot-timeout: 900
+
+#           emulator-options: >
+#             -no-window
+#             -no-audio
+#             -no-snapshot
+#             -gpu swiftshader_indirect
+
+#           script: |
+#             adb wait-for-device
+
+#             echo "Waiting for Android to fully boot..."
+#             adb shell 'while [[ "$(getprop sys.boot_completed | tr -d "\r")" != "1" ]]; do sleep 2; done'
+
+#             adb devices
+
+#             adb install -r app/diia-debug.apk
+
+#             appium --log-level info &
+#             APPIUM_PID=$!
+#             sleep 15
+
+#             npx wdio run wdio.conf.js
+
+#             echo "Stopping Appium..."
+#             kill $APPIUM_PID || true
+
 name: Mobile App Tests
 
 on:
   schedule:
-    - cron: '0 6 * * *'
+    - cron: '0 6 * * *' # every day at 6 AM
   workflow_dispatch:
 
 jobs:
   run-tests:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     timeout-minutes: 45
 
     steps:
@@ -181,13 +253,9 @@ jobs:
       - name: Start Android emulator and run tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 30
+          api-level: 33               # latest stable Android version
           target: google_apis
-          arch: x86_64
-
-          # 🔑 THIS IS THE KEY LINE
-          disable-linux-hw-accel: false
-
+          arch: arm64                 # must be arm64 on macOS
           force-avd-creation: true
           disable-animations: true
           emulator-boot-timeout: 900
@@ -199,6 +267,7 @@ jobs:
             -gpu swiftshader_indirect
 
           script: |
+            echo "Waiting for emulator to start..."
             adb wait-for-device
 
             echo "Waiting for Android to fully boot..."
@@ -206,12 +275,15 @@ jobs:
 
             adb devices
 
+            echo "Installing APK..."
             adb install -r app/diia-debug.apk
 
+            echo "Starting Appium server..."
             appium --log-level info &
             APPIUM_PID=$!
             sleep 15
 
+            echo "Running E2E tests..."
             npx wdio run wdio.conf.js
 
             echo "Stopping Appium..."
