@@ -184,16 +184,32 @@ jobs:
           api-level: 30
           target: google_apis
           arch: x86_64
+
+          enable-hw-accel: true
           force-avd-creation: true
           disable-animations: true
-          emulator-boot-timeout: 600
-          emulator-options: "-no-window -no-audio"
+          emulator-boot-timeout: 900
+
+          emulator-options: >
+            -no-window
+            -no-audio
+            -no-snapshot
+            -gpu swiftshader_indirect
+
           script: |
             adb wait-for-device
-            adb shell 'while [[ -z $(getprop sys.boot_completed | tr -d "\r") ]]; do sleep 1; done'
+
+            echo "Waiting for Android to fully boot..."
+            adb shell 'while [[ "$(getprop sys.boot_completed | tr -d "\r")" != "1" ]]; do sleep 2; done'
+
+            adb devices
+
             adb install -r app/diia-debug.apk
+
             appium --log-level info &
-            sleep 10
+            APPIUM_PID=$!
+            sleep 15
+
             npx wdio run wdio.conf.js
 
             echo "Stopping Appium..."
