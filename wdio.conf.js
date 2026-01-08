@@ -67,8 +67,8 @@ exports.config = {
         'appium:deviceName': 'emulator-5554',
         'appium:automationName': 'UiAutomator2',
         'appium:app': path.resolve('./app/diia-debug.apk'),
-        'appium:appPackage': 'ua.gov.diia.opensource',
-        'appium:appActivity': 'ua.gov.diia.opensource.VendorActivity',
+        // 'appium:appPackage': 'ua.gov.diia.opensource',
+        // 'appium:appActivity': 'ua.gov.diia.opensource.VendorActivity',
         'appium:autoGrantPermissions': true,
         'appium:noReset': false
       }],

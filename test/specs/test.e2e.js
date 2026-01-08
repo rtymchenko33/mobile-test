@@ -2,10 +2,10 @@ const { expect, driver } = require('@wdio/globals')
 
 describe('Open Diia app', () => {
     it('should open the Diia app and wait 5 seconds', async () => {
-        await driver.startActivity(
-            'ua.gov.diia.opensource',
-            'ua.gov.diia.opensource.VendorActivity'
-        );
+        // await driver.startActivity(
+        //     'ua.gov.diia.opensource',
+        //     'ua.gov.diia.opensource.VendorActivity'
+        // );
 
         const loginWithNBU = await $('android=new UiSelector().text("BankID HБУ")');
         await loginWithNBU.click();
