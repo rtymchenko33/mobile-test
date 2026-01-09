@@ -106,7 +106,15 @@ describe('Diia app test suite', () => {
         await menuBtn.click();
 
         const signoutBtn = getElementByText('Вийти');
-        await signoutBtn.waitForDisplayed({ timeout: 10000 });
+        
+        await driver.waitUntil(
+            async () => await signoutBtn.isExisting(),
+            {
+              timeout: 15000,
+              interval: 500,
+              timeoutMsg: '"Вийти" did not appear in menu'
+            }
+        );
         await signoutBtn.click();
 
         const confirmSignoutBtn = getElementByText('ВИЙТИ');
