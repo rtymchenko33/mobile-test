@@ -67,7 +67,7 @@ export async function restart() {
     });
 
     await driver.waitUntil(
-        async () => (await driver.queryAppState(appId)) === 4,
+        async () => (await driver.queryAppState('ua.gov.diia.opensource')) === 4,
         {
           timeout: 15000,
           interval: 500,
