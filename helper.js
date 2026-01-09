@@ -28,6 +28,7 @@ export async function authorize(codeDigit) {
     await signinBtn.click();
 
     const nextBtn = getElementByText('Далі');
+    await nextBtn.waitForDisplayed({ timeout: 10000 });
     await nextBtn.click();
     
     const codeScreenHeader = getElementByAccessibilityId('Придумайте\nкод з 4 цифр');
@@ -64,6 +65,15 @@ export async function restart() {
     await driver.execute('mobile: activateApp', { 
         appId: 'ua.gov.diia.opensource'
     });
+
+    await driver.waitUntil(
+        async () => (await driver.queryAppState(appId)) === 4,
+        {
+          timeout: 15000,
+          interval: 500,
+          timeoutMsg: 'App did not reach foreground state'
+        }
+    );
 }
 
 // ASSERTIONS
