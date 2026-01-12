@@ -129,6 +129,11 @@ export async function findTextViewByText(container, expectedText, normalizeNewli
 export async function assertTextView(resourceId, text) {
     const container = await getContainer(resourceId);
 
+    driver.$(
+        'android=new UiScrollable(new UiSelector().scrollable(true))' +
+        `.scrollTextIntoView("${text}")`
+    );
+
     const textView = await findTextViewByText(container, text);
     await expect(textView).toBeDisplayed();
 }
