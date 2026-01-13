@@ -1,4 +1,11 @@
 const path = require('path');
+const fs = require('fs');
+
+function ensureDir(dir) {
+    if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+    }
+}
 
 exports.config = {
     //
@@ -146,20 +153,23 @@ exports.config = {
     // see also: https://webdriver.io/docs/dot-reporter
     reporters: ['spec'],
 
-    
-    afterTest: async function (
-        test,
-        context,
-        { error, result, duration, passed }
-    ) {
+    before: function (capabilities, specs) {
+        ensureDir('./artifacts/screenshots');
+        ensureDir('./artifacts/pagesources');
+    },
+
+    afterTest: async function (test, context, { passed }) {
         if (!passed) {
-            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-            const testName = test.title.replace(/\s+/g, '_');
+            const safeName = test.title.replace(/\s+/g, '_');
+            const timestamp = Date.now();
 
-            const filePath = `./artifacts/screenshots/${testName}-${timestamp}.png`;
+            const screenshotPath = `./artifacts/screenshots/${safeName}-${timestamp}.png`;
+            const sourcePath = `./artifacts/pagesources/${safeName}-${timestamp}.xml`;
 
-            await driver.saveScreenshot(filePath);
-            console.log(`📸 Screenshot saved: ${filePath}`);
+            await driver.saveScreenshot(screenshotPath);
+
+            const source = await driver.getPageSource();
+            fs.writeFileSync(sourcePath, source);
         }
     },
 
