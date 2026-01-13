@@ -146,6 +146,23 @@ exports.config = {
     // see also: https://webdriver.io/docs/dot-reporter
     reporters: ['spec'],
 
+    
+    afterTest: async function (
+        test,
+        context,
+        { error, result, duration, passed }
+    ) {
+        if (!passed) {
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const testName = test.title.replace(/\s+/g, '_');
+
+            const filePath = `./artifacts/screenshots/${testName}-${timestamp}.png`;
+
+            await driver.saveScreenshot(filePath);
+            console.log(`📸 Screenshot saved: ${filePath}`);
+        }
+    },
+
     // Options to be passed to Mocha.
     // See the full list at http://mochajs.org/
     mochaOpts: {

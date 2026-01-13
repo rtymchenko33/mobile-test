@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      ANDROID_EMULATOR_WAIT_TIME_BEFORE_KILL: 10  # optional, faster shutdown
+      ANDROID_EMULATOR_WAIT_TIME_BEFORE_KILL: 10
 
     steps:
       - name: Checkout repo
@@ -53,4 +53,11 @@ jobs:
 
             # run tests — Appium service in WDIO will handle starting/killing Appium
             npx wdio run wdio.conf.js --spec ./test/specs/docs.e2e.js
+
+      - name: Upload screenshots on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-screenshots
+          path: artifacts/screenshots
 
