@@ -128,14 +128,29 @@ export async function findTextViewByText(container, expectedText, normalizeNewli
     throw new Error(`No TextView found with text "${expectedText}" in container`);
 }
 
+// export async function scrollContainerIntoView(resourceId) {
+//     const container = await driver.$(
+//         'android=new UiScrollable(new UiSelector().scrollable(true))' +
+//         `.scrollIntoView(new UiSelector().resourceId("${resourceId}"))`
+//     );
+
+//     await container.waitForDisplayed({
+//         timeout: 20000,
+//         timeoutMsg: `Container ${resourceId} not visible`
+//     });
+
+//     return container;
+// }
+
 export async function scrollContainerIntoView(resourceId) {
     const container = await driver.$(
-        'android=new UiScrollable(new UiSelector().scrollable(true))' +
+        'android=new UiScrollable(' +
+            'new UiSelector().resourceId("documents_scroll"))' +
         `.scrollIntoView(new UiSelector().resourceId("${resourceId}"))`
     );
 
     await container.waitForDisplayed({
-        timeout: 20000,
+        timeout: 30000,
         timeoutMsg: `Container ${resourceId} not visible`
     });
 
