@@ -1,8 +1,6 @@
 name: Mobile App Tests
 
 on:
-  schedule:
-    - cron: '0 6 * * *'
   workflow_dispatch:
 
 jobs:
@@ -38,9 +36,11 @@ jobs:
       - name: Start Android emulator and run tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 30
-          arch: x86
+          api-level: 31
+          arch: x86_64
           target: google_apis
+          avd-name: medium-phone-api-31
+          profile: pixel_4
           force-avd-creation: true
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
           disable-animations: true
@@ -52,7 +52,7 @@ jobs:
             adb install -r app/diia-debug.apk
 
             # run tests — Appium service in WDIO will handle starting/killing Appium
-            npx wdio run wdio.conf.js --spec ./test/specs/docs.e2e.js
+            npx wdio run wdio.conf.js
 
       - name: Upload screenshots on failure
         if: failure()

@@ -96,24 +96,53 @@ export async function assertPopup(title = '', msg = '') {
 
 // OTHER
 
-export async function getContainer(resourceId) {
-    const container = driver.$(
-        'android=new UiScrollable(new UiSelector().scrollable(true))' +
-        `.scrollIntoView(new UiSelector().resourceId("${resourceId}"))`
-    );
+export async function scrollUntilVisible(selector, maxSwipes = 10) {
+    for (let i = 0; i < maxSwipes; i++) {
+        const el = await driver.$(selector);
+        if (await el.isDisplayed()) {
+            return el;
+        }
 
-    await container.waitForDisplayed({ 
-        timeout: 10000,
-        timeoutMsg: `Container ${resourceId} not found after scrolling`
+        const { height, width } = await driver.getWindowRect();
+
+        const startX = Math.floor(width / 2);
+        const startY = Math.floor(height * 0.8);
+        const endY   = Math.floor(height * 0.2);
+
+        await driver.performActions([{
+            type: 'pointer',
+            id: 'finger1',
+            parameters: { pointerType: 'touch' },
+            actions: [
+                { type: 'pointerMove', duration: 0, x: startX, y: startY },
+                { type: 'pointerDown', button: 0 },
+                { type: 'pause', duration: 300 },
+                { type: 'pointerMove', duration: 600, x: startX, y: endY },
+                { type: 'pointerUp', button: 0 }
+            ]
+        }]);
+
+        await driver.pause(800);
+    }
+
+    throw new Error(`Element ${selector} not visible after scrolling`);
+}
+
+export async function getContainer(resourceId) {
+    const selector = `android=new UiSelector().resourceId("${resourceId}")`;
+
+    const container = await scrollUntilVisible(selector);
+
+    await container.waitForDisplayed({
+        timeout: 5000,
+        timeoutMsg: `Container ${resourceId} not visible`
     });
-    
+
     return container;
 }
 
 export async function findTextViewByText(container, expectedText, normalizeNewlines = true) {
     const textViews = await container.$$('android.widget.TextView');
-
-    console.log('LOOK HERE', await driver.getPageSource());
     
     for (const textView of textViews) {
         const text = await textView.getText();
@@ -128,121 +157,9 @@ export async function findTextViewByText(container, expectedText, normalizeNewli
     throw new Error(`No TextView found with text "${expectedText}" in container`);
 }
 
-// export async function scrollContainerIntoView(resourceId) {
-//     const container = await driver.$(
-//         'android=new UiScrollable(new UiSelector().scrollable(true))' +
-//         `.scrollIntoView(new UiSelector().resourceId("${resourceId}"))`
-//     );
+export async function assertTextView(resourceId, text, normalizeNewlines = true) {
+    const container = await getContainer(resourceId);
 
-//     await container.waitForDisplayed({
-//         timeout: 20000,
-//         timeoutMsg: `Container ${resourceId} not visible`
-//     });
-
-//     return container;
-// }
-
-export async function scrollContainerIntoView(resourceId) {
-    const container = await driver.$(
-        'android=new UiScrollable(' +
-            'new UiSelector().resourceId("documents_scroll"))' +
-        `.scrollIntoView(new UiSelector().resourceId("${resourceId}"))`
-    );
-
-    await container.waitForDisplayed({
-        timeout: 30000,
-        timeoutMsg: `Container ${resourceId} not visible`
-    });
-
-    return container;
+    const textView = await findTextViewByText(container, text, normalizeNewlines);
+    await expect(textView).toBeDisplayed();
 }
-
-export async function assertTextView(resourceId, expectedText, normalizeNewlines = true) {
-    const container = await scrollContainerIntoView(resourceId);
-
-    await driver.waitUntil(
-        async () => {
-            const textViews = await container.$$('android.widget.TextView');
-
-            console.log('LOOK HERE', await driver.getPageSource());
-
-            for (const tv of textViews) {
-                const actual = await tv.getText();
-
-                const a = normalizeNewlines
-                    ? actual.replace(/\n/g, '').trim()
-                    : actual.trim();
-
-                const e = normalizeNewlines
-                    ? expectedText.replace(/\n/g, '').trim()
-                    : expectedText.trim();
-
-                if (a === e) {
-                    return await tv.isDisplayed();
-                }
-            }
-            return false;
-        },
-        {
-            timeout: 20000,
-            interval: 500,
-            timeoutMsg: `Text "${expectedText}" not found in ${resourceId}`
-        }
-    );
-}
-
-// export async function assertTextView(resourceId, text, normalizeNewlines = true) {
-//     // const container = await getContainer(resourceId);
-
-//     // const element = await driver.$(
-//     //     'android=new UiScrollable(' +
-//     //         `new UiSelector().resourceId("${resourceId}").scrollable(true))` +
-//     //     `.scrollIntoView(new UiSelector().text("${text}"))`
-//     // );
-
-//     // await element.waitForDisplayed({
-//     //     timeout: 15000,
-//     //     timeoutMsg: `Text "${text}" not visible in ${resourceId}`
-//     // });
-
-//     // const textView = await findTextViewByText(container, text, normalizeNewlines);
-//     // await expect(textView).toBeDisplayed();
-
-//     const element = await driver.$(
-//         'android=new UiScrollable(new UiSelector().scrollable(true))' +
-//         `.scrollIntoView(new UiSelector().text("${text}"))`
-//     );
-
-//     await element.waitForDisplayed({
-//         timeout: 20000,
-//         timeoutMsg: `Text "${text}" not visible on screen`
-//     });
-
-//     // 2. NOW find the container again (important!)
-//     const container = await driver.$(
-//         `android=new UiSelector().resourceId("${resourceId}")`
-//     );
-
-//     await container.waitForDisplayed({ timeout: 5000 });
-
-//     // 3. Assert text is inside container
-//     const textViews = await container.$$('android.widget.TextView');
-
-//     for (const tv of textViews) {
-//         const actual = await tv.getText();
-//         const expected = normalizeNewlines
-//             ? text.replace(/\n/g, '').trim()
-//             : text.trim();
-
-//         const normalizedActual = normalizeNewlines
-//             ? actual.replace(/\n/g, '').trim()
-//             : actual.trim();
-
-//         if (normalizedActual === expected) {
-//             await expect(tv).toBeDisplayed();
-//             return;
-//         }
-//     }
-
-//     throw new Error(`Text "${text}" not found in container ${resourceId}`);
-// }
