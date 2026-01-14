@@ -31,7 +31,7 @@ exports.config = {
         'appium:deviceName': 'iPhone 15 Pro',
         'appium:platformVersion': '17.4',
         'appium:automationName': 'XCUITest',
-        'appium:app': path.resolve('/Users/romantimchenko/diia-open-source/ios-diia/build/Build/Products/Debug-iphonesimulator/DiiaOpenSource.app'),
+        'appium:app': path.resolve('/Users/romantimchenko/diia-open-source/ios-diia/build/Build/Products/Debug-iphonesimulator/DiiaOpenSource.app'), //TODO  потрібно це переробити
         'appium:bundleId': 'ua.gov.diia.opensource.app',
         'appium:noReset': false,
         'appium:fullReset': false,
