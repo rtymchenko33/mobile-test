@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<AppiumAUT>
+  <XCUIElementTypeApplication type="XCUIElementTypeApplication" name="DiiaOS" label="DiiaOS" enabled="true" visible="true" accessible="false" x="0" y="0" width="393" height="852" index="0" traits="" processId="39189" bundleId="ua.gov.diia.opensource.app">
+    <XCUIElementTypeWindow type="XCUIElementTypeWindow" enabled="true" visible="true" accessible="false" x="0" y="0" width="393" height="852" index="0" traits="">
+      <XCUIElementTypeOther type="XCUIElementTypeOther" enabled="true" visible="true" accessible="false" x="0" y="0" width="393" height="852" index="0" traits="">
+        <XCUIElementTypeOther type="XCUIElementTypeOther" enabled="true" visible="true" accessible="false" x="0" y="0" width="393" height="852" index="0" traits="">
+          <XCUIElementTypeOther type="XCUIElementTypeOther" enabled="true" visible="true" accessible="false" x="0" y="0" width="393" height="852" index="0" traits="">
+            <XCUIElementTypeOther type="XCUIElementTypeOther" enabled="true" visible="true" accessible="false" x="0" y="0" width="393" height="852" index="0" traits="">
+              <XCUIElementTypeOther type="XCUIElementTypeOther" enabled="true" visible="true" accessible="false" x="0" y="0" width="393" height="852" index="0" traits="">
+                <XCUIElementTypeOther type="XCUIElementTypeOther" enabled="true" visible="true" accessible="false" x="0" y="0" width="393" height="852" index="0" traits="">
+                  <XCUIElementTypeImage type="XCUIElementTypeImage" name="light_background" enabled="true" visible="false" accessible="false" x="0" y="0" width="393" height="852" index="0" traits="Image"/>
+                  <XCUIElementTypeOther type="XCUIElementTypeOther" enabled="true" visible="true" accessible="false" x="0" y="58" width="393" height="125" index="1" traits="">
+                    <XCUIElementTypeOther type="XCUIElementTypeOther" enabled="true" visible="true" accessible="false" x="0" y="90" width="393" height="77" index="0" traits="">
+                      <XCUIElementTypeOther type="XCUIElementTypeOther" enabled="true" visible="true" accessible="false" x="0" y="90" width="393" height="77" index="0" traits="">
+                        <XCUIElementTypeOther type="XCUIElementTypeOther" enabled="true" visible="true" accessible="false" x="0" y="90" width="393" height="45" index="0" traits="">
+                          <XCUIElementTypeOther type="XCUIElementTypeOther" enabled="true" visible="true" accessible="false" x="24" y="90" width="345" height="45" index="0" traits=""/>
+                          <XCUIElementTypeButton type="XCUIElementTypeButton" name="Назад" label="Назад" enabled="true" visible="true" accessible="true" x="24" y="90" width="44" height="45" index="1" traits="Button">
+                            <XCUIElementTypeStaticText type="XCUIElementTypeStaticText" enabled="true" visible="false" accessible="false" x="24" y="90" width="0" height="1" index="0" traits="StaticText"/>
+                          </XCUIElementTypeButton>
+                        </XCUIElementTypeOther>
+                        <XCUIElementTypeOther type="XCUIElementTypeOther" enabled="true" visible="true" accessible="false" x="0" y="135" width="393" height="32" index="1" traits="">
+                          <XCUIElementTypeOther type="XCUIElementTypeOther" enabled="true" visible="true" accessible="false" x="24" y="135" width="345" height="32" index="0" traits="">
+                            <XCUIElementTypeOther type="XCUIElementTypeOther" enabled="true" visible="true" accessible="false" x="24" y="135" width="345" height="32" index="0" traits="">
+                              <XCUIElementTypeStaticText type="XCUIElementTypeStaticText" value="Оберіть свій банк" name="Оберіть свій банк" label="Оберіть свій банк" enabled="true" visible="true" accessible="true" x="24" y="135" width="345" height="32" index="0" traits="StaticText"/>
+                            </XCUIElementTypeOther>
+                          </XCUIElementTypeOther>
+                        </XCUIElementTypeOther>
+                      </XCUIElementTypeOther>
+                    </XCUIElementTypeOther>
+                  </XCUIElementTypeOther>
+                  <XCUIElementTypeStaticText type="XCUIElementTypeStaticText" value="Триває завантаження даних, будь ласка, зачекайте" name="Триває завантаження даних, будь ласка, зачекайте" label="Триває завантаження даних, будь ласка, зачекайте" enabled="true" visible="true" accessible="false" x="0" y="182" width="393" height="670" index="2" traits="StaticText">
+                    <XCUIElementTypeScrollView type="XCUIElementTypeScrollView" enabled="true" visible="true" accessible="false" x="0" y="182" width="393" height="670" index="0" traits="">
+                      <XCUIElementTypeOther type="XCUIElementTypeOther" name="body_bankid" enabled="true" visible="true" accessible="false" x="0" y="182" width="393" height="388" index="0" traits="">
+                        <XCUIElementTypeOther type="XCUIElementTypeOther" name="body_bankid" enabled="true" visible="true" accessible="false" x="24" y="190" width="345" height="380" index="0" traits="">
+                          <XCUIElementTypeStaticText type="XCUIElementTypeStaticText" value="Для авторизації за допомогою BankID, оберіть свій банк та увійдіть до системи інтернет-банкінгу. Авторизація не передбачає жодного доступу до фінансової інформації." name="title_bankid" label="Для авторизації за допомогою BankID, оберіть свій банк та увійдіть до системи інтернет-банкінгу. Авторизація не передбачає жодного доступу до фінансової інформації." enabled="true" visible="true" accessible="true" x="24" y="190" width="345" height="73" index="0" traits="StaticText"/>
+                          <XCUIElementTypeOther type="XCUIElementTypeOther" enabled="true" visible="true" accessible="false" x="24" y="286" width="345" height="284" index="1" traits="">
+                            <XCUIElementTypeSearchField type="XCUIElementTypeSearchField" name="search_bankid" label="Пошук банку для авторизації" enabled="true" visible="true" accessible="true" x="24" y="286" width="345" height="41" index="0" traits="SearchField"/>
+                            <XCUIElementTypeOther type="XCUIElementTypeOther" enabled="true" visible="true" accessible="false" x="24" y="342" width="345" height="228" index="1" traits="">
+                              <XCUIElementTypeOther type="XCUIElementTypeOther" enabled="true" visible="true" accessible="false" x="24" y="342" width="345" height="228" index="0" traits="">
+                                <XCUIElementTypeButton type="XCUIElementTypeButton" name="Банк НаДія  . " label="Банк НаДія  . " enabled="true" visible="true" accessible="true" x="24" y="342" width="345" height="57" index="0" traits="Button"/>
+                                <XCUIElementTypeOther type="XCUIElementTypeOther" enabled="true" visible="true" accessible="false" x="24" y="398" width="345" height="2" index="1" traits=""/>
+                                <XCUIElementTypeButton type="XCUIElementTypeButton" name="Bank Polska  . " label="Bank Polska  . " enabled="true" visible="true" accessible="true" x="24" y="399" width="345" height="57" index="2" traits="Button"/>
+                                <XCUIElementTypeOther type="XCUIElementTypeOther" enabled="true" visible="true" accessible="false" x="24" y="455" width="345" height="2" index="3" traits=""/>
+                                <XCUIElementTypeButton type="XCUIElementTypeButton" name="special_1  . " label="special_1  . " enabled="true" visible="true" accessible="true" x="24" y="456" width="345" height="57" index="4" traits="Button"/>
+                                <XCUIElementTypeOther type="XCUIElementTypeOther" enabled="true" visible="true" accessible="false" x="24" y="512" width="345" height="2" index="5" traits=""/>
+                                <XCUIElementTypeButton type="XCUIElementTypeButton" name="dfs_1  . " label="dfs_1  . " enabled="true" visible="true" accessible="true" x="24" y="513" width="345" height="57" index="6" traits="Button"/>
+                              </XCUIElementTypeOther>
+                            </XCUIElementTypeOther>
+                          </XCUIElementTypeOther>
+                        </XCUIElementTypeOther>
+                      </XCUIElementTypeOther>
+                      <XCUIElementTypeOther type="XCUIElementTypeOther" value="0%" name="Vertical scroll bar, 1 page" label="Vertical scroll bar, 1 page" enabled="true" visible="true" accessible="false" x="360" y="206" width="30" height="597" index="1" traits="Adjustable"/>
+                      <XCUIElementTypeOther type="XCUIElementTypeOther" value="0%" name="Horizontal scroll bar, 1 page" label="Horizontal scroll bar, 1 page" enabled="true" visible="true" accessible="false" x="49" y="819" width="295" height="30" index="2" traits="Adjustable"/>
+                    </XCUIElementTypeScrollView>
+                  </XCUIElementTypeStaticText>
+                </XCUIElementTypeOther>
+              </XCUIElementTypeOther>
+            </XCUIElementTypeOther>
+          </XCUIElementTypeOther>
+        </XCUIElementTypeOther>
+      </XCUIElementTypeOther>
+    </XCUIElementTypeWindow>
+  </XCUIElementTypeApplication>
+</AppiumAUT>

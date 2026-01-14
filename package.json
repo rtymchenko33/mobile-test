@@ -5,7 +5,11 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "wdio": "wdio run ./wdio.conf.js"
+    "wdio": "wdio run ./wdio.conf.js",
+    "wdio:ios": "wdio run ./wdio.ios.conf.js",
+    "wdio:ios:auth": "wdio run ./wdio.ios.conf.js --spec ./test/specs/iOS/auth.e2e.js",
+    "wdio:ios:auth:first": "wdio run ./wdio.ios.conf.js --spec ./test/specs/iOS/auth.e2e.js --mochaOpts.grep \"user should be able to authorize in the app for the first time\"",
+    "wdio:ios:auth:two": "wdio run ./wdio.ios.conf.js --spec ./test/specs/iOS/auth.e2e.js --mochaOpts.grep \"first time|log in to the app\""
   },
   "keywords": [],
   "author": "",
@@ -19,6 +23,7 @@
     "@wdio/spec-reporter": "^9.20.0",
     "appium": "^3.1.2",
     "appium-uiautomator2-driver": "^6.7.8",
+    "appium-xcuitest-driver": "^10.14.10",
     "webdriverio": "^9.23.0"
   }
 }

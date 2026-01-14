@@ -1,0 +1,17 @@
+СКОПІЮЙТЕ ЦЕ В АППІУМ INSPECTOR (W3C формат з префіксом appium:):
+
+{
+  "platformName": "iOS",
+  "appium:deviceName": "iPhone 15 Pro",
+  "appium:platformVersion": "17.4",
+  "appium:automationName": "XCUITest",
+  "appium:app": "/Users/romantimchenko/diia-open-source/ios-diia/build/Build/Products/Debug-iphonesimulator/DiiaOpenSource.app",
+  "appium:bundleId": "ua.gov.diia.opensource.app",
+  "appium:noReset": false,
+  "appium:fullReset": false,
+  "appium:wdaLaunchTimeout": 60000
+}
+
+---
+Примітка: Важливо використовувати префікс "appium:" для всіх Appium-специфічних capabilities.
+Тільки "platformName" залишається без префіксу, оскільки це стандартна W3C capability.
