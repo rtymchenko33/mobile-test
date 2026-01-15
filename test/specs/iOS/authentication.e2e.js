@@ -4,6 +4,7 @@ const path = require('path');
 const { 
     getElementByText,
     getElementByAccessibilityId,
+    getElementByClassChain,
     authorize,
     forgotCode,
     login,
@@ -41,14 +42,15 @@ describe('Auth test suite', () => {
     });
 
     it('user should be able to change pin code (via Settings)', async () => {
-        const menuBtn = getElementByAccessibilityId('МенюЄ нові повідомлення');
+        const menuBtn = getElementByAccessibilityId('menuSettingsInactive');
+        await menuBtn.waitForDisplayed({ timeout: 10000 });
         await menuBtn.click();
 
-        const settingsBtn = getElementByAccessibilityId('Налаштування');
+        const settingsBtn = getElementByAccessibilityId('Налаштування .');
+        await settingsBtn.waitForDisplayed({ timeout: 10000 });
         await settingsBtn.click();
 
-        // Для iOS використовуємо accessibility identifier або текст
-        const changePinBtn = getElementByText('Змінити код для входу');
+        const changePinBtn = getElementByAccessibilityId('Змінити код для входу');
         await changePinBtn.waitForDisplayed({ timeout: 10000 });
         await changePinBtn.click();
 
@@ -72,11 +74,12 @@ describe('Auth test suite', () => {
             'Ви змінили код для входу у застосунок Дія.'
         );
 
-        const thankBtn = getElementByText('Дякую');
+        const thankBtn = getElementByClassChain('Button', 'name == "Дякую" OR label == "Дякую"');
+        await thankBtn.waitForDisplayed({ timeout: 10000 });
         await thankBtn.click();
 
         // Для iOS перевіряємо наявність екрану налаштувань по тексту
-        const settingsHeader = getElementByText('Налаштування');
+        const settingsHeader = getElementByAccessibilityId('Налаштування');
         await settingsHeader.waitForDisplayed({ timeout: 10000 });
         await expect(settingsHeader).toBeDisplayed();
     });
@@ -90,23 +93,25 @@ describe('Auth test suite', () => {
     });
 
     it('user should be able to sign out from the app', async () => {
-        const menuBtn = getElementByAccessibilityId('МенюЄ нові повідомлення');
+        const menuBtn = getElementByAccessibilityId('menuSettingsInactive');
+        await menuBtn.waitForDisplayed({ timeout: 10000 });
         await menuBtn.click();
 
         // Для iOS прокручуємо до кнопки "Вийти"
         await driver.execute('mobile: scroll', {
             direction: 'down',
-            predicateString: 'label == "Вийти"'
+            predicateString: 'name == "Вийти" OR label == "Вийти"'
         });
 
-        const signoutBtn = getElementByText('Вийти');
+        const signoutBtn = getElementByClassChain('Button', 'name == "Вийти" OR label == "Вийти"');
         await signoutBtn.waitForDisplayed({ timeout: 10000 });
         await signoutBtn.click();
 
-        const confirmSignoutBtn = getElementByText('ВИЙТИ');
+        const confirmSignoutBtn = getElementByClassChain('Button', 'name == "Вийти" OR label == "Вийти"');
+        await confirmSignoutBtn.waitForDisplayed({ timeout: 10000 });
         await confirmSignoutBtn.click();
 
-        const loginWithNBU = getElementByText('BankID HБУ');
+        const loginWithNBU = getElementByClassChain('Button', 'name == "BankID НБУ  . "');
         await expect(loginWithNBU).toBeDisplayed();
     });
 
@@ -128,8 +133,12 @@ describe('Auth test suite', () => {
             'Пройдіть повторну авторизацію у застосунку'
         );
 
-        const authorizeBtn = getElementByText('Авторизуватися');
+        const authorizeBtn = getElementByClassChain('Button', 'name == "Авторизуватися" OR label == "Авторизуватися"');
+        await authorizeBtn.waitForDisplayed({ timeout: 10000 });
         await authorizeBtn.click();
+
+        // Даємо час на перехід на екран авторизації
+        await driver.pause(2000);
 
         await authorize('4');
 

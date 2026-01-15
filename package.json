@@ -7,9 +7,9 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "wdio": "wdio run ./wdio.conf.js",
     "wdio:ios": "wdio run ./wdio.ios.conf.js",
-    "wdio:ios:auth": "wdio run ./wdio.ios.conf.js --spec ./test/specs/iOS/auth.e2e.js",
-    "wdio:ios:auth:first": "wdio run ./wdio.ios.conf.js --spec ./test/specs/iOS/auth.e2e.js --mochaOpts.grep \"user should be able to authorize in the app for the first time\"",
-    "wdio:ios:auth:two": "wdio run ./wdio.ios.conf.js --spec ./test/specs/iOS/auth.e2e.js --mochaOpts.grep \"first time|log in to the app\""
+    "wdio:ios:auth": "wdio run ./wdio.ios.conf.js --spec ./test/specs/iOS/authentication.e2e.js",
+    "wdio:ios:auth:first": "wdio run ./wdio.ios.conf.js --spec ./test/specs/iOS/authentication.e2e.js --mochaOpts.grep \"user should be able to authorize in the app for the first time\"",
+    "wdio:ios:auth:two": "wdio run ./wdio.ios.conf.js --spec ./test/specs/iOS/authentication.e2e.js --mochaOpts.grep \"first time|log in to the app\""
   },
   "keywords": [],
   "author": "",
