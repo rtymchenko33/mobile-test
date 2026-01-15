@@ -9,7 +9,7 @@ const {
     assertPopup,
     restart,
     enterPinCode
-} = require('../../helper');
+} = require('../../../helpers/helper');
 
 describe('Auth test suite', () => {
     it('user should be able to authorize in the app for the first time', async () => {

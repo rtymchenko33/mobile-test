@@ -10,7 +10,7 @@ const {
     findTextViewByText,
     getContainer,
     assertTextView
-} = require('../../helper');
+} = require('../../../helpers/helper');
 
 describe('Docs test suite', () => {
     it('user should be able to observe driver license document (short info)', async () => {
