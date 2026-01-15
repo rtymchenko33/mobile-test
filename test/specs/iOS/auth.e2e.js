@@ -11,7 +11,7 @@ const {
     assertPopup,
     restart,
     enterPinCode
-} = require(path.resolve(__dirname, '../../../helper-iOS.js'));
+} = require(path.resolve(__dirname, '../../../helpers/helper-iOS.js'));
 
 describe('Auth test suite', () => {
     it('user should be able to authorize in the app for the first time', async () => {
