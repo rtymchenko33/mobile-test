@@ -128,52 +128,132 @@ function getElementByTypeAndText(elementType, text) {
  */
 async function authorize(codeDigit) {
     return withLog('authorize', `codeDigit=${codeDigit}`, async () => {
+        // Очікуємо повного завантаження екрану авторизації
+        // Спочатку пробуємо знайти чекбокс, якщо не виходить - пробуємо кнопку BankID
+        let checkbox;
+        try {
+            checkbox = getElementByAccessibilityId('checkbox_conditions_bordered_auth');
+            await checkbox.waitForDisplayed({ timeout: 20000 });
+        } catch (e) {
+            // Якщо чекбокс не знайдено, пробуємо знайти кнопку BankID (екран може бути вже завантажений)
+            const loginWithNBU = getElementByClassChain('Button', 'name == "BankID НБУ  . "');
+            await loginWithNBU.waitForDisplayed({ timeout: 20000 });
+            // Якщо знайшли кнопку, пробуємо знайти чекбокс ще раз
+            checkbox = getElementByAccessibilityId('checkbox_conditions_bordered_auth');
+            await checkbox.waitForDisplayed({ timeout: 5000 });
+        }
+
         // Спочатку активуємо чекбокс згоди з обробкою персональних даних
-        const checkbox = getElementByAccessibilityId('checkbox_conditions_bordered_auth');
-        await checkbox.waitForDisplayed({ timeout: 15000 });
         await expect(checkbox).toBeDisplayed();
 
         const loginWithNBU = getElementByClassChain('Button', 'name == "BankID НБУ  . "');
         await expect(loginWithNBU).toBeDisplayed();
         await loginWithNBU.click();
         
-        // Даємо час на завантаження WebView
-        await driver.pause(2000);
-
-        // Знаходимо кнопку Банк НаДія
-        // ⚠️ У кнопки немає accessibilityIdentifier, використовуємо пошук по тексту
-        // Кнопка з'являється в WebView після кліку на BankID НБУ
+        // Очікуємо завантаження WebView - перевіряємо появу кнопки "Банк НаДія"
         const bankNadiia = getElementByText('Банк НаДія');
-        // await bankNadiia.waitForDisplayed({ timeout: 15000 });
+        await bankNadiia.waitForDisplayed({ timeout: 15000 });
         await expect(bankNadiia).toBeDisplayed();
         await bankNadiia.click();
 
         // Вводимо токен в поле вводу
+        const TOKEN = 'B7B5908CFBA2DBDA1BE9';
+        console.log(`[DEBUG] authorize() | Початок введення токену: ${TOKEN} (довжина: ${TOKEN.length})`);
+        
         let tokenInput;
         try {
             // Спочатку спробуємо знайти по accessibilityIdentifier (якщо буде додано)
             tokenInput = getElementByAccessibilityId('tokenInputField');
-            await tokenInput.waitForDisplayed({ timeout: 2000 });
+            await tokenInput.waitForDisplayed({ timeout: 200 });
+            console.log(`[DEBUG] authorize() | Знайдено поле по accessibilityIdentifier: tokenInputField`);
         } catch (e) {
             // Fallback: використовуємо Predicate String
             tokenInput = getElementByPredicate('type == "XCUIElementTypeTextField" AND enabled == true AND visible == true');
-            await tokenInput.waitForDisplayed({ timeout: 15000 });
+            await tokenInput.waitForDisplayed({ timeout: 1500 });
+            console.log(`[DEBUG] authorize() | Знайдено поле по Predicate String (fallback)`);
         }
         await expect(tokenInput).toBeDisplayed();
-        await tokenInput.click();
-        await tokenInput.setValue('B7B5908CFBA2DBDA1BE9');
+        
+        // Перевіряємо початковий стан поля
+        try {
+            const initialValue = await tokenInput.getValue();
+            console.log(`[DEBUG] authorize() | Початкове значення поля: "${initialValue}"`);
+        } catch (e) {
+            console.log(`[DEBUG] authorize() | Не вдалося отримати початкове значення поля: ${e.message}`);
+        }
+        
+        // Очищаємо поле перед введенням
+        try {
+            await tokenInput.click();
+            await driver.pause(100);
+            // Для iOS clear() може не працювати, використовуємо альтернативний метод
+            try {
+                await tokenInput.clear();
+                console.log(`[DEBUG] authorize() | Поле очищено через clear()`);
+            } catch (clearError) {
+                // Альтернативний метод: встановлюємо порожнє значення
+                await tokenInput.setValue('');
+                await driver.pause(100);
+                console.log(`[DEBUG] authorize() | Поле очищено через setValue('')`);
+            }
+        } catch (e) {
+            console.log(`[DEBUG] authorize() | Помилка при очищенні поля: ${e.message}`);
+        }
+        
+        // Вводимо токен
+        console.log(`[DEBUG] authorize() | Введення токену через setValue(): ${TOKEN}`);
+        await tokenInput.setValue(TOKEN);
+        
+        // Очікуємо, що токен введено - перевіряємо значення поля
+        await driver.waitUntil(
+            async () => {
+                try {
+                    const enteredValue = await tokenInput.getValue();
+                    return enteredValue && enteredValue.length > 0;
+                } catch (e) {
+                    return false;
+                }
+            },
+            { timeout: 5000, timeoutMsg: 'Token was not entered' }
+        );
+        
+        // Перевіряємо, що саме введено в поле
+        try {
+            const enteredValue = await tokenInput.getValue();
+            console.log(`[DEBUG] authorize() | Значення після setValue(): "${enteredValue}" (довжина: ${enteredValue ? enteredValue.length : 0})`);
+            
+            if (enteredValue !== TOKEN) {
+                console.log(`[WARNING] authorize() | Токен обрізано! Очікувано: "${TOKEN}", отримано: "${enteredValue}"`);
+                console.log(`[WARNING] authorize() | Відсутні символи: "${TOKEN.replace(enteredValue, '')}"`);
+                
+                // Спробуємо ввести токен посимвольно
+                console.log(`[DEBUG] authorize() | Спроба введення посимвольно...`);
+                await tokenInput.clear();
+                await driver.pause(200);
+                
+                for (let i = 0; i < TOKEN.length; i++) {
+                    await tokenInput.addValue(TOKEN[i]);
+                    await driver.pause(50);
+                }
+                await driver.pause(500);
+                
+                const valueAfterCharByChar = await tokenInput.getValue();
+                console.log(`[DEBUG] authorize() | Значення після посимвольного введення: "${valueAfterCharByChar}" (довжина: ${valueAfterCharByChar ? valueAfterCharByChar.length : 0})`);
+            } else {
+                console.log(`[DEBUG] authorize() | Токен введено коректно!`);
+            }
+        } catch (e) {
+            console.log(`[DEBUG] authorize() | Помилка при отриманні значення після введення: ${e.message}`);
+        }
 
         // Знаходимо кнопку SignIn
         const signinBtn = getElementByAccessibilityId('SignIn');
         await expect(signinBtn).toBeDisplayed();
         await signinBtn.click();
         
-        // Даємо час на обробку авторизації
-        await driver.pause(2000);
-
-        // Знаходимо кнопку Далі
-        // Використовуємо Class Chain по name, оскільки це XCUIElementTypeButton з name="Далі"
+        // Очікуємо завершення обробки авторизації - перевіряємо появу кнопки "Далі"
         const nextBtn = getElementByClassChain('Button', 'name == "Далі"');
+        await nextBtn.waitForDisplayed({ timeout: 60000 });
         await expect(nextBtn).toBeDisplayed();
         await nextBtn.click();
         
@@ -201,20 +281,17 @@ async function forgotCode() {
         // Якщо ні, то виконуємо restart() і чекаємо на появу екрану введення PIN коду
         try {
             const codeScreenHeader = getElementByXPath('//XCUIElementTypeStaticText[contains(@label, "Код для входу")] | //XCUIElementTypeStaticText[contains(@label, "код з 4 цифр")]');
-            await codeScreenHeader.waitForDisplayed({ timeout: 5000 });
+            await codeScreenHeader.waitForDisplayed({ timeout: 500 });
         } catch (e) {
             // Якщо екран введення PIN коду не з'явився, виконуємо restart() і чекаємо на екран
             await restart();
             const codeScreenHeaderAfterRestart = getElementByXPath('//XCUIElementTypeStaticText[contains(@label, "Код для входу")] | //XCUIElementTypeStaticText[contains(@label, "код з 4 цифр")]');
-            await codeScreenHeaderAfterRestart.waitForDisplayed({ timeout: 15000 });
+            await codeScreenHeaderAfterRestart.waitForDisplayed({ timeout: 1500 });
         }
 
         const forgotCodeBtn = getElementByText("Не пам'ятаю код для входу");
         await forgotCodeBtn.waitForDisplayed({ timeout: 10000 });
         await forgotCodeBtn.click();
-
-        // Додаємо невелику паузу для появи діалогового вікна
-        await driver.pause(2000);
 
         // Використовуємо Class Chain для надійного пошуку кнопки "Авторизуватися"
         // Кнопка має type: XCUIElementTypeButton, name: "Авторизуватися"
@@ -228,7 +305,38 @@ async function forgotCode() {
             confirmAuthorize = getElementByPredicate('type == "XCUIElementTypeButton" AND name == "Авторизуватися" AND enabled == true');
             await confirmAuthorize.waitForDisplayed({ timeout: 15000 });
         }
+        console.log(`[DEBUG] forgotCode() | Клік на кнопку "Авторизуватися"`);
         await confirmAuthorize.click();
+        
+        // Очікуємо перехід на екран авторизації - спочатку пробуємо знайти чекбокс
+        try {
+            const checkbox = getElementByAccessibilityId('checkbox_conditions_bordered_auth');
+            await checkbox.waitForDisplayed({ timeout: 10000 });
+            console.log(`[DEBUG] forgotCode() | Екран авторизації завантажено (знайдено чекбокс)`);
+        } catch (e) {
+            // Якщо чекбокс не знайдено, пробуємо знайти кнопку BankID
+            try {
+                const loginWithNBU = getElementByClassChain('Button', 'name == "BankID НБУ  . "');
+                await loginWithNBU.waitForDisplayed({ timeout: 10000 });
+                console.log(`[DEBUG] forgotCode() | Екран авторизації завантажено (знайдено кнопку BankID)`);
+            } catch (e2) {
+                // Якщо нічого не знайдено, це не критично - authorize() сам перевірить
+                console.log(`[DEBUG] forgotCode() | Елементи екрану авторизації не знайдено, але це нормально`);
+            }
+        }
+        
+        // Перевіряємо, чи є поле вводу токену на екрані (можливо воно вже відкрите)
+        try {
+            const tokenInputCheck = getElementByAccessibilityId('tokenInputField');
+            const isTokenFieldVisible = await tokenInputCheck.isDisplayed();
+            console.log(`[DEBUG] forgotCode() | Поле tokenInputField видиме: ${isTokenFieldVisible}`);
+            if (isTokenFieldVisible) {
+                const tokenValue = await tokenInputCheck.getValue();
+                console.log(`[DEBUG] forgotCode() | Поточне значення в полі токену: "${tokenValue}"`);
+            }
+        } catch (e) {
+            console.log(`[DEBUG] forgotCode() | Поле tokenInputField не знайдено (це нормально, воно з'явиться після кліку на BankID)`);
+        }
     });
 }
 
@@ -255,15 +363,45 @@ async function restart() {
             bundleId: 'ua.gov.diia.opensource.app'
         });
 
-        // Даємо час на закриття додатку
+        // Невелика пауза для закриття додатку
         await driver.pause(1000);
 
         await driver.execute('mobile: activateApp', { 
             bundleId: 'ua.gov.diia.opensource.app'
         });
 
-        // Даємо час на запуск додатку
-        await driver.pause(2000);
+        // Очікуємо завантаження додатку - перевіряємо появу стартового екрану
+        // Може бути або екран авторизації (з чекбоксом), або екран введення PIN
+        // Використовуємо waitUntil для більш гнучкого очікування
+        await driver.waitUntil(
+            async () => {
+                // Спочатку пробуємо знайти екран введення PIN (частіший випадок після restart)
+                try {
+                    const pinScreen = getElementByXPath('//XCUIElementTypeStaticText[contains(@label, "Код для входу")] | //XCUIElementTypeStaticText[contains(@label, "код з 4 цифр")]');
+                    if (await pinScreen.isDisplayed()) {
+                        return true;
+                    }
+                } catch (e) {
+                    // Якщо екран PIN не знайдено, пробуємо знайти екран авторизації
+                    try {
+                        const checkbox = getElementByAccessibilityId('checkbox_conditions_bordered_auth');
+                        if (await checkbox.isDisplayed()) {
+                            return true;
+                        }
+                    } catch (e2) {
+                        // Якщо і це не спрацювало, пробуємо кнопку BankID
+                        try {
+                            const loginWithNBU = getElementByClassChain('Button', 'name == "BankID НБУ  . "');
+                            return await loginWithNBU.isDisplayed();
+                        } catch (e3) {
+                            return false;
+                        }
+                    }
+                }
+                return false;
+            },
+            { timeout: 20000, timeoutMsg: 'App did not load after restart' }
+        );
     });
 }
 
@@ -272,12 +410,31 @@ async function restart() {
  */
 async function enterPinCode(codeDigit) {
     return withLog('enterPinCode', `codeDigit=${codeDigit}`, async () => {
+        // Перевіряємо, що екран введення PIN активний
+        // Можемо перевірити наявність заголовка екрану
+        try {
+            const pinCreateHeader = getElementByAccessibilityId('title_pincreate');
+            await pinCreateHeader.waitForDisplayed({ timeout: 2000 });
+        } catch (e) {
+            // Можливо це екран підтвердження або входу
+            try {
+                const pinConfirmHeader = getElementByAccessibilityId('title_pinconfirm');
+                await pinConfirmHeader.waitForDisplayed({ timeout: 2000 });
+            } catch (e2) {
+                // Або екран входу
+                const pinLoginHeader = getElementByXPath('//XCUIElementTypeStaticText[contains(@label, "Код для входу")] | //XCUIElementTypeStaticText[contains(@label, "код з 4 цифр")]');
+                await pinLoginHeader.waitForDisplayed({ timeout: 2000 });
+            }
+        }
+
         // Для iOS шукаємо кнопку з текстом цифри
         const codeButton = getElementByText(`${codeDigit}`);
         await codeButton.waitForDisplayed({ timeout: 5000 });
         
         for (let i = 0; i < 4; i++) {
             await codeButton.click();
+            // Невелика пауза між кліками для стабільності
+            await driver.pause(100);
         }
     });
 }
@@ -289,25 +446,76 @@ async function enterPinCode(codeDigit) {
  */
 async function assertGreeting() {
     return withLog('assertGreeting', '', async () => {
-        // Спочатку шукаємо по accessibilityId
+        // Спочатку перевіряємо, що головний екран завантажився
+        // Використовуємо waitUntil для гнучкого очікування появи будь-якого елемента головного екрану
+        let greetingFound = false;
+        await driver.waitUntil(
+            async () => {
+                // Перевіряємо наявність меню (якщо меню є, головний екран завантажився)
+                try {
+                    const menuBtn = getElementByAccessibilityId('menuSettingsInactive');
+                    if (await menuBtn.isDisplayed()) {
+                        return true;
+                    }
+                } catch (e) {
+                    // Якщо меню не знайдено, пробуємо знайти привітання
+                    try {
+                        const greeting = getElementByAccessibilityId('Привіт, Віктор 👋');
+                        if (await greeting.isDisplayed()) {
+                            greetingFound = true;
+                            return true;
+                        }
+                    } catch (e2) {
+                        // Спробуємо знайти привітання через predicate
+                        try {
+                            const greetingPredicate = getElementByPredicate('label CONTAINS "Привіт" OR name CONTAINS "Привіт"');
+                            if (await greetingPredicate.isDisplayed()) {
+                                greetingFound = true;
+                                return true;
+                            }
+                        } catch (e3) {
+                            return false;
+                        }
+                    }
+                }
+                return false;
+            },
+            { timeout: 30000, timeoutMsg: 'Main screen did not load after authorization' }
+        );
+
+        // Якщо привітання вже знайдено в waitUntil, просто перевіряємо його
+        if (greetingFound) {
+            const greeting = getElementByAccessibilityId('Привіт, Віктор 👋');
+            try {
+                await expect(greeting).toBeDisplayed();
+                return;
+            } catch (e) {
+                // Якщо не знайдено по accessibilityId, пробуємо predicate
+                const greetingPredicate = getElementByPredicate('label CONTAINS "Привіт" OR name CONTAINS "Привіт"');
+                await expect(greetingPredicate).toBeDisplayed();
+                return;
+            }
+        }
+
+        // Якщо привітання не знайдено в waitUntil, шукаємо його явно
         const greeting = getElementByAccessibilityId('Привіт, Віктор 👋');
         try {
-            await greeting.waitForDisplayed({ timeout: 30000 });
+            await greeting.waitForDisplayed({ timeout: 10000 });
             await expect(greeting).toBeDisplayed();
             return;
         } catch (e) {
-            // Фолбек: точний match по name/label/value зі скріншоту інспектора
+            // Фолбек: точний match по name/label/value
             try {
                 const greetingExact = getElementByPredicate(
                     'label == "Привіт, Віктор 👋" OR name == "Привіт, Віктор 👋" OR value == "Привіт, Віктор 👋"'
                 );
-                await greetingExact.waitForDisplayed({ timeout: 30000 });
+                await greetingExact.waitForDisplayed({ timeout: 10000 });
                 await expect(greetingExact).toBeDisplayed();
                 return;
             } catch (err) {
-                // Фолбек: шукаємо будь-який текст з "Привіт" (інше ім'я/емодзі/пробіли)
+                // Фолбек: шукаємо будь-який текст з "Привіт"
                 const greetingPredicate = getElementByPredicate('label CONTAINS "Привіт" OR name CONTAINS "Привіт"');
-                await greetingPredicate.waitForDisplayed({ timeout: 30000 });
+                await greetingPredicate.waitForDisplayed({ timeout: 10000 });
                 await expect(greetingPredicate).toBeDisplayed();
             }
         }

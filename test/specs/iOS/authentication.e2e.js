@@ -42,6 +42,20 @@ describe('Auth test suite', () => {
     });
 
     it('user should be able to change pin code (via Settings)', async () => {
+        // Перевіряємо, що користувач авторизований - чекаємо на появу меню
+        // Можливо, попередній тест ще не завершився повністю
+        await driver.waitUntil(
+            async () => {
+                try {
+                    const menuBtn = getElementByAccessibilityId('menuSettingsInactive');
+                    return await menuBtn.isDisplayed();
+                } catch (e) {
+                    return false;
+                }
+            },
+            { timeout: 15000, timeoutMsg: 'Menu button not found - user may not be authorized' }
+        );
+
         const menuBtn = getElementByAccessibilityId('menuSettingsInactive');
         await menuBtn.waitForDisplayed({ timeout: 10000 });
         await menuBtn.click();
@@ -93,9 +107,35 @@ describe('Auth test suite', () => {
     });
 
     it('user should be able to sign out from the app', async () => {
+        // Перевіряємо, що користувач авторизований - чекаємо на появу меню
+        await driver.waitUntil(
+            async () => {
+                try {
+                    const menuBtn = getElementByAccessibilityId('menuSettingsInactive');
+                    return await menuBtn.isDisplayed();
+                } catch (e) {
+                    return false;
+                }
+            },
+            { timeout: 15000, timeoutMsg: 'Menu button not found - user may not be authorized' }
+        );
+
         const menuBtn = getElementByAccessibilityId('menuSettingsInactive');
         await menuBtn.waitForDisplayed({ timeout: 10000 });
         await menuBtn.click();
+
+        // Очікуємо відкриття меню - перевіряємо наявність елементів меню
+        await driver.waitUntil(
+            async () => {
+                try {
+                    const settingsBtn = getElementByAccessibilityId('Налаштування .');
+                    return await settingsBtn.isDisplayed();
+                } catch (e) {
+                    return false;
+                }
+            },
+            { timeout: 5000, timeoutMsg: 'Menu did not open' }
+        );
 
         // Для iOS прокручуємо до кнопки "Вийти"
         await driver.execute('mobile: scroll', {
@@ -103,19 +143,57 @@ describe('Auth test suite', () => {
             predicateString: 'name == "Вийти" OR label == "Вийти"'
         });
 
-        const signoutBtn = getElementByClassChain('Button', 'name == "Вийти" OR label == "Вийти"');
+        // Знаходимо кнопку "Вийти" в меню (не в діалозі)
+        // Використовуємо більш специфічний селектор - кнопка в меню має бути видимою та enabled
+        const signoutBtn = getElementByClassChain('Button', 'name == "Вийти" AND enabled == true AND visible == true');
         await signoutBtn.waitForDisplayed({ timeout: 10000 });
         await signoutBtn.click();
 
-        const confirmSignoutBtn = getElementByClassChain('Button', 'name == "Вийти" OR label == "Вийти"');
+        // Очікуємо появу діалогу підтвердження
+        await driver.waitUntil(
+            async () => {
+                try {
+                    // Перевіряємо наявність діалогу підтвердження
+                    const confirmDialog = getElementByClassChain('Button', 'name == "Вийти" AND enabled == true');
+                    return await confirmDialog.isDisplayed();
+                } catch (e) {
+                    return false;
+                }
+            },
+            { timeout: 5000, timeoutMsg: 'Confirmation dialog did not appear' }
+        );
+
+        // Клікаємо на кнопку підтвердження в діалозі
+        const confirmSignoutBtn = getElementByClassChain('Button', 'name == "Вийти" AND enabled == true');
         await confirmSignoutBtn.waitForDisplayed({ timeout: 10000 });
         await confirmSignoutBtn.click();
 
+        // Очікуємо появу екрану авторизації
         const loginWithNBU = getElementByClassChain('Button', 'name == "BankID НБУ  . "');
+        await loginWithNBU.waitForDisplayed({ timeout: 10000 });
         await expect(loginWithNBU).toBeDisplayed();
     });
 
     it('user should be able to authorize to the app after sign out', async () => {
+        // Очікуємо появу екрану авторизації після виходу
+        // Перевіряємо наявність кнопки BankID або чекбокса
+        await driver.waitUntil(
+            async () => {
+                try {
+                    const loginWithNBU = getElementByClassChain('Button', 'name == "BankID НБУ  . "');
+                    return await loginWithNBU.isDisplayed();
+                } catch (e) {
+                    try {
+                        const checkbox = getElementByAccessibilityId('checkbox_conditions_bordered_auth');
+                        return await checkbox.isDisplayed();
+                    } catch (e2) {
+                        return false;
+                    }
+                }
+            },
+            { timeout: 10000, timeoutMsg: 'Authorization screen did not appear after sign out' }
+        );
+        
         await authorize('3');
 
         await assertGreeting();
@@ -137,8 +215,23 @@ describe('Auth test suite', () => {
         await authorizeBtn.waitForDisplayed({ timeout: 10000 });
         await authorizeBtn.click();
 
-        // Даємо час на перехід на екран авторизації
-        await driver.pause(2000);
+        // Очікуємо перехід на екран авторизації
+        await driver.waitUntil(
+            async () => {
+                try {
+                    const loginWithNBU = getElementByClassChain('Button', 'name == "BankID НБУ  . "');
+                    return await loginWithNBU.isDisplayed();
+                } catch (e) {
+                    try {
+                        const checkbox = getElementByAccessibilityId('checkbox_conditions_bordered_auth');
+                        return await checkbox.isDisplayed();
+                    } catch (e2) {
+                        return false;
+                    }
+                }
+            },
+            { timeout: 10000, timeoutMsg: 'Authorization screen did not appear after reauthorization' }
+        );
 
         await authorize('4');
 
