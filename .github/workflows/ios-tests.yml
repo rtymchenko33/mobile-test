@@ -1,0 +1,65 @@
+name: iOS App Tests
+
+on:
+  workflow_dispatch:
+
+jobs:
+  ios-tests:
+    runs-on: macos-latest
+
+    env:
+      IOS_APP_PATH: ${{ github.workspace }}/ios-app/DiiaOpenSource.app
+      IOS_BUNDLE_ID: ua.gov.diia.opensource.app
+      IOS_DEVICE_NAME: iPhone 15 Pro
+      IOS_PLATFORM_VERSION: '17.4'
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Select Xcode
+        run: sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Appium + XCUITest driver
+        run: |
+          npm install -g appium
+          appium driver update xcuitest
+
+      - name: Boot iOS simulator
+        run: |
+          xcrun simctl boot "${IOS_DEVICE_NAME}" || true
+          open -a Simulator
+          xcrun simctl bootstatus "${IOS_DEVICE_NAME}" -b
+
+      - name: Verify iOS app bundle
+        run: |
+          if [ ! -d "${IOS_APP_PATH}" ]; then
+            echo "iOS app bundle not found at ${IOS_APP_PATH}"
+            echo "Set IOS_APP_PATH to the built .app bundle location."
+            exit 1
+          fi
+
+      - name: Run iOS tests
+        run: npx wdio run wdio.ios.conf.js
+
+      - name: Upload screenshots on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-screenshots
+          path: artifacts/screenshots
+
+      - name: Upload page sources on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-pagesources
+          path: artifacts/pagesources
