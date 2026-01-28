@@ -73,10 +73,9 @@ jobs:
 
       - name: Setup iOS app bundle
         id: setup-app
-        continue-on-error: true
         run: bash scripts/ios/setup-app.sh
         env:
-          IOS_SOURCE_APP_PATH: ${{ secrets.IOS_SOURCE_APP_PATH || '' }}
+          IOS_SOURCE_APP_PATH: ${{ secrets.IOS_SOURCE_APP_PATH }}
 
       - name: Verify app bundle exists
         id: verify-app
