@@ -1,66 +1,55 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 
-echo "=== Перевірка Appium та XCUITest driver ==="
+echo "=== Перевірка та встановлення Appium + XCUITest driver ==="
 
 # Перехід до root директорії проекту
 cd "$(dirname "$0")/../.."
 
-# Використовуємо локальний Appium через npx
-APPIUM="npx appium"
+# Виводимо версії Node.js та npm
+echo "Node.js версія: $(node -v)"
+echo "npm версія: $(npm -v)"
 
-# Перевірка чи встановлено Appium (через node_modules)
-if [ ! -d "node_modules/appium" ]; then
-    echo "❌ Appium не знайдено в node_modules. Встановлюємо залежності..."
-    npm install
-fi
+# Встановлюємо глобально Appium з детерміністичною версією
+APPIUM_VERSION="3.1.2"
+echo "Встановлюємо Appium глобально версія $APPIUM_VERSION..."
 
-echo "✅ Appium знайдено: $($APPIUM --version 2>/dev/null || echo 'version unknown')"
-
-# Перевірка XCUITest driver
-# Встановлюємо APPIUM_HOME щоб уникнути проблем з permissions
-export APPIUM_HOME="${APPIUM_HOME:-$HOME/.appium}"
-mkdir -p "$APPIUM_HOME"
-
-# Перевіряємо чи driver встановлений через npm пакет (найнадійніший спосіб)
-if [ -d "node_modules/appium-xcuitest-driver" ]; then
-    echo "✅ XCUITest driver знайдено в node_modules"
-    DRIVER_CHECK="xcuitest"
-else
-    DRIVER_CHECK=""
-fi
-
-# Якщо не знайдено в node_modules, перевіряємо через appium команду
-if [ -z "$DRIVER_CHECK" ]; then
-    DRIVER_CHECK=$($APPIUM driver list --installed 2>&1 | grep -o "xcuitest" | head -1 || echo "")
-fi
-if [ -z "$DRIVER_CHECK" ]; then
-    echo "⚠️  XCUITest driver не знайдено в node_modules"
-    echo "Перевіряємо чи він встановлений через npm пакет..."
-    
-    # Перевіряємо package.json
-    if grep -q "appium-xcuitest-driver" package.json; then
-        echo "✅ appium-xcuitest-driver знайдено в package.json"
-        echo "Перевіряємо node_modules..."
-        if [ ! -d "node_modules/appium-xcuitest-driver" ]; then
-            echo "❌ Driver не встановлено. Встановлюємо залежності..."
-            npm install
-        fi
+# Перевіряємо чи вже встановлено правильну версію
+if command -v appium &> /dev/null; then
+    INSTALLED_VERSION=$(appium --version 2>/dev/null || echo "")
+    if [ "$INSTALLED_VERSION" = "$APPIUM_VERSION" ]; then
+        echo "✅ Appium $APPIUM_VERSION вже встановлено"
     else
-        echo "❌ appium-xcuitest-driver не знайдено в package.json"
-        echo "Встановлюємо..."
-        npm install --save-dev appium-xcuitest-driver
-    fi
-    
-    # Фінальна перевірка
-    if [ -d "node_modules/appium-xcuitest-driver" ]; then
-        echo "✅ XCUITest driver готовий"
-    else
-        echo "❌ XCUITest driver не вдалося встановити"
-        exit 1
+        echo "Оновлюємо Appium з $INSTALLED_VERSION до $APPIUM_VERSION..."
+        npm install -g "appium@$APPIUM_VERSION"
     fi
 else
+    echo "Встановлюємо Appium..."
+    npm install -g "appium@$APPIUM_VERSION"
+fi
+
+# Перевіряємо встановлення
+APPIUM_VERSION_INSTALLED=$(appium --version 2>/dev/null || echo "невідомо")
+echo "✅ Appium встановлено: $APPIUM_VERSION_INSTALLED"
+
+# Встановлюємо/оновлюємо XCUITest driver
+echo "Встановлюємо/оновлюємо XCUITest driver..."
+appium driver install xcuitest || appium driver update xcuitest || {
+    echo "⚠️ Помилка встановлення driver, спроба через appium driver install..."
+    appium driver install xcuitest --force
+}
+
+# Перевіряємо встановлені drivers
+echo ""
+echo "Встановлені Appium drivers:"
+appium driver list --installed || echo "Не вдалося отримати список drivers"
+
+# Перевіряємо чи xcuitest driver встановлено
+if appium driver list --installed 2>/dev/null | grep -q "xcuitest"; then
     echo "✅ XCUITest driver встановлено"
+else
+    echo "❌ XCUITest driver не знайдено після встановлення"
+    exit 1
 fi
 
-echo "✅ Appium готово до роботи"
+echo "✅ Appium та XCUITest driver готові до роботи"

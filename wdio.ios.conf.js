@@ -68,7 +68,7 @@ exports.config = {
     logLevel: 'info',
     bail: 0,
     waitforTimeout: 10000,
-    connectionRetryTimeout: process.env.CI ? 180000 : 120000, // CI повільніший
+    connectionRetryTimeout: process.env.CI ? 180000 : 120000, // Збільшений timeout для CI
     connectionRetryCount: 2,
     services: ['appium'],
     framework: 'mocha',
