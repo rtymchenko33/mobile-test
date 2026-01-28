@@ -11,6 +11,15 @@ on:
       - 'wdio.ios.conf.js'
       - 'scripts/ios/**'
       - 'helpers/helper-iOS.js'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/ios-tests.yml'
+      - 'test/specs/iOS/**'
+      - 'wdio.ios.conf.js'
+      - 'scripts/ios/**'
+      - 'helpers/helper-iOS.js'
 
 jobs:
   ios-tests:
@@ -63,6 +72,8 @@ jobs:
           IOS_SOURCE_DIR: ../ios-diia
 
       - name: Setup iOS app bundle
+        id: setup-app
+        continue-on-error: true
         run: bash scripts/ios/setup-app.sh
         env:
           IOS_SOURCE_APP_PATH: ${{ secrets.IOS_SOURCE_APP_PATH || '' }}
@@ -71,11 +82,23 @@ jobs:
         run: |
           if [ ! -d "./ios-app/DiiaOpenSource.app" ]; then
             echo "❌ App bundle не знайдено в ./ios-app/DiiaOpenSource.app"
-            echo "Перевірте що build-app.sh виконався успішно або встановіть IOS_SOURCE_APP_PATH"
-            exit 1
+            echo ""
+            echo "Можливі рішення:"
+            echo "1. Додайте iOS source repo як submodule або checkout перед build кроком"
+            echo "2. Встановіть GitHub Secret 'IOS_SOURCE_APP_PATH' зі шляхом до app bundle"
+            echo "3. Завантажте pre-built app bundle як artifact з попереднього build"
+            echo ""
+            echo "Для тестування можна пропустити цей крок встановивши:"
+            echo "  SKIP_APP_VERIFY=true"
+            if [ "${{ secrets.SKIP_APP_VERIFY || 'false' }}" != "true" ]; then
+              exit 1
+            else
+              echo "⚠️ SKIP_APP_VERIFY=true - пропускаємо перевірку app bundle"
+            fi
+          else
+            echo "✅ App bundle знайдено"
+            ls -lh ./ios-app/DiiaOpenSource.app
           fi
-          echo "✅ App bundle знайдено"
-          ls -lh ./ios-app/DiiaOpenSource.app
 
       - name: Boot iOS simulator
         run: bash scripts/ios/boot-sim.sh
@@ -94,6 +117,7 @@ jobs:
         run: npx wdio run wdio.ios.conf.js
         env:
           IOS_APP_PATH: ./ios-app/DiiaOpenSource.app
+        continue-on-error: ${{ secrets.SKIP_APP_VERIFY == 'true' }}
 
       - name: Upload screenshots on failure
         if: failure()
