@@ -4,8 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "bash scripts/ios/run-tests.sh",
+    "test:ios": "bash scripts/ios/run-tests.sh",
+    "test:ios:ci": "npx wdio run wdio.ios.conf.js",
     "test:ios:auth": "wdio run ./wdio.ios.conf.js --spec ./test/specs/iOS/authentication.e2e.js",
+    "pretest:ios": "bash scripts/ios/ensure-appium.sh && bash scripts/ios/setup-app.sh && bash scripts/ios/boot-sim.sh",
     "wdio": "wdio run ./wdio.conf.js",
     "wdio:ios": "wdio run ./wdio.ios.conf.js",
     "wdio:ios:auth": "wdio run ./wdio.ios.conf.js --spec ./test/specs/iOS/authentication.e2e.js",

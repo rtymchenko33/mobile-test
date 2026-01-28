@@ -1,16 +1,23 @@
 const path = require('path');
 const fs = require('fs');
 
+// Визначаємо шлях до app bundle
+// Пріоритет: IOS_APP_PATH env var > workspace relative path
 const iosAppPath = process.env.IOS_APP_PATH ||
-    '/Users/romantimchenko/diia-open-source/ios-diia/build/Build/Products/Debug-iphonesimulator/DiiaOpenSource.app';
+    path.join(__dirname, 'ios-app', 'DiiaOpenSource.app');
 const iosBundleId = process.env.IOS_BUNDLE_ID || 'ua.gov.diia.opensource.app';
 const iosDeviceName = process.env.IOS_DEVICE_NAME || 'iPhone 15 Pro';
 const iosPlatformVersion = process.env.IOS_PLATFORM_VERSION || '17.4';
 
+// Перевірка існування app bundle з детальним повідомленням
 if (!fs.existsSync(iosAppPath)) {
+    const resolvedPath = path.resolve(iosAppPath);
+    const workspacePath = process.env.GITHUB_WORKSPACE || __dirname;
     throw new Error(
-        `iOS app not found at "${iosAppPath}". ` +
-        'Set IOS_APP_PATH to the built .app bundle before running tests.'
+        `iOS app not found at "${resolvedPath}".\n` +
+        `Workspace: ${workspacePath}\n` +
+        `Set IOS_APP_PATH environment variable or ensure app is built to ./ios-app/DiiaOpenSource.app\n` +
+        `In CI, run: bash scripts/ios/build-app.sh`
     );
 }
 
@@ -61,7 +68,7 @@ exports.config = {
     logLevel: 'info',
     bail: 0,
     waitforTimeout: 10000,
-    connectionRetryTimeout: 120000,
+    connectionRetryTimeout: process.env.CI ? 180000 : 120000, // CI повільніший
     connectionRetryCount: 2,
     services: ['appium'],
     framework: 'mocha',

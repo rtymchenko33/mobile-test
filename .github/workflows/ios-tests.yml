@@ -2,53 +2,98 @@ name: iOS App Tests
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/ios-tests.yml'
+      - 'test/specs/iOS/**'
+      - 'wdio.ios.conf.js'
+      - 'scripts/ios/**'
+      - 'helpers/helper-iOS.js'
 
 jobs:
   ios-tests:
     runs-on: macos-latest
+    timeout-minutes: 30
 
     env:
-      IOS_APP_PATH: ${{ github.workspace }}/ios-app/DiiaOpenSource.app
       IOS_BUNDLE_ID: ua.gov.diia.opensource.app
       IOS_DEVICE_NAME: iPhone 15 Pro
       IOS_PLATFORM_VERSION: '17.4'
+      CI: true
 
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
 
       - name: Select Xcode
         run: sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer
 
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: List available simulators
+        run: xcrun simctl list devices available | grep -i "iphone" | head -10
+
       - name: Install dependencies
         run: npm ci
 
-      - name: Install Appium + XCUITest driver
-        run: |
-          npm install -g appium
-          appium driver update xcuitest
+      - name: Ensure Appium + XCUITest driver
+        run: bash scripts/ios/ensure-appium.sh
 
-      - name: Boot iOS simulator
+      - name: Build iOS app (if source available)
+        id: build-app
+        continue-on-error: true
         run: |
-          xcrun simctl boot "${IOS_DEVICE_NAME}" || true
-          open -a Simulator
-          xcrun simctl bootstatus "${IOS_DEVICE_NAME}" -b
+          echo "Спроба build iOS app..."
+          bash scripts/ios/build-app.sh || {
+            echo "⚠️ Build не вдався або source недоступний"
+            echo "build_skipped=true" >> $GITHUB_OUTPUT
+          }
+        env:
+          IOS_SOURCE_DIR: ../ios-diia
 
-      - name: Verify iOS app bundle
+      - name: Setup iOS app bundle
+        run: bash scripts/ios/setup-app.sh
+        env:
+          IOS_SOURCE_APP_PATH: ${{ secrets.IOS_SOURCE_APP_PATH || '' }}
+
+      - name: Verify app bundle exists
         run: |
-          if [ ! -d "${IOS_APP_PATH}" ]; then
-            echo "iOS app bundle not found at ${IOS_APP_PATH}"
-            echo "Set IOS_APP_PATH to the built .app bundle location."
+          if [ ! -d "./ios-app/DiiaOpenSource.app" ]; then
+            echo "❌ App bundle не знайдено в ./ios-app/DiiaOpenSource.app"
+            echo "Перевірте що build-app.sh виконався успішно або встановіть IOS_SOURCE_APP_PATH"
             exit 1
           fi
+          echo "✅ App bundle знайдено"
+          ls -lh ./ios-app/DiiaOpenSource.app
+
+      - name: Boot iOS simulator
+        run: bash scripts/ios/boot-sim.sh
+        env:
+          OPEN_SIMULATOR: false
+
+      - name: Verify simulator is booted
+        run: |
+          xcrun simctl list devices | grep "Booted" || {
+            echo "❌ Simulator не запущено"
+            exit 1
+          }
+          echo "✅ Simulator запущено"
 
       - name: Run iOS tests
         run: npx wdio run wdio.ios.conf.js
+        env:
+          IOS_APP_PATH: ./ios-app/DiiaOpenSource.app
 
       - name: Upload screenshots on failure
         if: failure()
@@ -56,6 +101,7 @@ jobs:
         with:
           name: ios-screenshots
           path: artifacts/screenshots
+          retention-days: 7
 
       - name: Upload page sources on failure
         if: failure()
@@ -63,3 +109,22 @@ jobs:
         with:
           name: ios-pagesources
           path: artifacts/pagesources
+          retention-days: 7
+
+      - name: Upload build logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-build-logs
+          path: ios-build/xcodebuild.log
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Upload Appium logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-appium-logs
+          path: appium.log
+          if-no-files-found: ignore
+          retention-days: 7
