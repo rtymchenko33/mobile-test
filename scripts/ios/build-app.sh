@@ -142,14 +142,30 @@ else
     }
 fi
 
-# Знаходимо зібраний app bundle
-BUILT_APP=$(find "$ABS_BUILD_DIR/DerivedData" -name "*.app" -type d -path "*/Build/Products/*-iphonesimulator/*.app" | head -1)
+# Знаходимо зібраний app bundle (xcodebuild кладе його в Build/Products/Debug-iphonesimulator/)
+DERIVED_DATA_PATH="$ABS_BUILD_DIR/DerivedData"
+PRODUCTS_DEBUG="$DERIVED_DATA_PATH/Build/Products/Debug-iphonesimulator"
+PRODUCTS_RELEASE="$DERIVED_DATA_PATH/Build/Products/Release-iphonesimulator"
+
+BUILT_APP=""
+if [ -d "$PRODUCTS_DEBUG" ]; then
+    BUILT_APP=$(find "$PRODUCTS_DEBUG" -maxdepth 1 -name "*.app" -type d | head -1)
+fi
+if [ -z "$BUILT_APP" ] && [ -d "$PRODUCTS_RELEASE" ]; then
+    BUILT_APP=$(find "$PRODUCTS_RELEASE" -maxdepth 1 -name "*.app" -type d | head -1)
+fi
+if [ -z "$BUILT_APP" ]; then
+    # Резервний пошук по всьому DerivedData
+    BUILT_APP=$(find "$DERIVED_DATA_PATH" -name "*.app" -type d -path "*/Build/Products/*-iphonesimulator/*.app" | head -1)
+fi
 
 if [ -z "$BUILT_APP" ]; then
     echo "❌ Зібраний app bundle не знайдено"
-    echo "Шукаємо в: $ABS_BUILD_DIR/DerivedData"
+    echo "Шукаємо в: $DERIVED_DATA_PATH"
+    echo "Структура Build/Products:"
+    ls -la "$DERIVED_DATA_PATH/Build/Products" 2>/dev/null || true
     echo "Знайдені .app файли:"
-    find "$ABS_BUILD_DIR/DerivedData" -name "*.app" -type d | head -10
+    find "$DERIVED_DATA_PATH" -name "*.app" -type d | head -10
     echo ""
     echo "Останні 50 рядків build логу:"
     tail -50 "$ABS_BUILD_DIR/xcodebuild.log"
