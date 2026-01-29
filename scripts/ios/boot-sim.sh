@@ -90,12 +90,11 @@ try:
     
     if best_device:
         print(best_device[0])
-        print(f\"Використовуємо fallback: {best_device[1]} на {best_device[2]}\", file=sys.stderr)
     else:
         print('')
-except:
+except Exception:
     print('')
-" 2>&1)
+" 2>/dev/null)
     
     if [ -z "$DEVICE_UDID" ]; then
         echo "❌ Не знайдено жодного доступного iPhone simulator"
@@ -160,3 +159,8 @@ fi
 # Експортуємо UDID для використання в тестах
 export IOS_DEVICE_UDID="$DEVICE_UDID"
 echo "Експортовано: IOS_DEVICE_UDID=$DEVICE_UDID"
+
+# У CI — записуємо UDID у GITHUB_OUTPUT, щоб тести використовували саме запущений симулятор
+if [ -n "${GITHUB_OUTPUT:-}" ]; then
+    echo "udid=$DEVICE_UDID" >> "$GITHUB_OUTPUT"
+fi

@@ -90,6 +90,7 @@ jobs:
           fi
 
       - name: Boot iOS simulator
+        id: boot-sim
         run: bash scripts/ios/boot-sim.sh
         env:
           OPEN_SIMULATOR: false
@@ -108,6 +109,7 @@ jobs:
         run: npm run test:ios:ci
         env:
           IOS_APP_PATH: ./ios-app/DiiaOpenSource.app
+          IOS_DEVICE_UDID: ${{ steps.boot-sim.outputs.udid }}
 
       - name: Upload screenshots on failure
         if: failure()

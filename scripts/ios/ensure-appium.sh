@@ -44,8 +44,8 @@ echo ""
 echo "Встановлені Appium drivers:"
 appium driver list --installed || echo "Не вдалося отримати список drivers"
 
-# Перевіряємо чи xcuitest driver встановлено
-if appium driver list --installed 2>/dev/null | grep -q "xcuitest"; then
+# Перевіряємо чи xcuitest driver встановлено (вивід йде в stderr, тому 2>&1)
+if appium driver list --installed 2>&1 | grep -qi "xcuitest"; then
     echo "✅ XCUITest driver встановлено"
 else
     echo "❌ XCUITest driver не знайдено після встановлення"

@@ -50,6 +50,7 @@ exports.config = {
         platformName: 'iOS',
         'appium:deviceName': iosDeviceName,
         'appium:platformVersion': iosPlatformVersion,
+        ...(process.env.IOS_DEVICE_UDID ? { 'appium:udid': process.env.IOS_DEVICE_UDID } : {}),
         'appium:automationName': 'XCUITest',
         'appium:app': path.resolve(iosAppPath),
         'appium:bundleId': iosBundleId,
