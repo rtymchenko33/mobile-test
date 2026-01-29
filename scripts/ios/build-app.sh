@@ -3,6 +3,9 @@ set -euo pipefail
 
 echo "=== Build iOS App для Simulator ==="
 
+# Корінь репозиторію (тестів) — зберігаємо до будь-якого cd
+REPO_ROOT="$(pwd)"
+
 # Шлях до iOS source проекту
 IOS_SOURCE_DIR="${IOS_SOURCE_DIR:-./ios-diia}"
 BUILD_DIR="./ios-build"
@@ -89,8 +92,8 @@ fi
 
 echo "✅ Використовуємо scheme: $SCHEME"
 
-# Повертаємося до root директорії проекту
-cd "$(dirname "$0")/../.."
+# Повертаємося до root директорії проекту (скрипт міг бути викликаний з ios-diia)
+cd "$REPO_ROOT"
 
 # Створюємо директорії для build
 mkdir -p "$BUILD_DIR/DerivedData"
